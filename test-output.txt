@@ -1,0 +1,1 @@
+{"place_id":"ChIJGVufiMcCdkgRiEh0wNjOSBQ","formatted_address":"London E14 9AP, UK","geometry":{"location":{"lat":51.5024582,"lng":-0.0238832}}}

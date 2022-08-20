@@ -1,0 +1,1 @@
+{"place_id":"some-id","formatted_address":"some-address","geometry":{"location":{"lat":0,"lng":0}}}
