@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	google "github.com/eunicebjm/gc/internal/google/geocoder"
-	"github.com/eunicebjm/gc/pkg/models"
 	"log"
 	"os"
 )
@@ -14,42 +12,49 @@ var (
 	ErrInvalidParam = errors.New("invalid_parameter")
 )
 
-// Geocoder is the service business logic interface.
-type Geocoder interface {
-	GeocodeOne(address string) (models.Result, error)
-	GeocodeBatch(req models.Request) (models.Response, error)
-}
-
 type Service struct {
-	GoogleClient google.Client
+	reader Reader
+	parser Parser
 }
 
-func NewService(GoogleClient google.Client) (*Service, error) {
-	if GoogleClient == nil {
-		return nil, fmt.Errorf("%w: GoogleClient", ErrInvalidParam)
-	}
+type Reader interface {
+	LoadText(url string) ([]string, error)
+	LoadText2(url string) (string, error)
+}
 
+type Parser interface {
+	GetWords(content []string) map[string]int
+}
+
+func New(reader Reader, parser Parser) *Service {
 	return &Service{
-		GoogleClient: GoogleClient,
-	}, nil
+		reader: reader,
+		parser: parser,
+	}
 }
 
-func (s Service) GeocodeOne(address string) (models.Result, error) {
-	res, err := s.GoogleClient.GeocodeOne(address)
+func (s *Service) CountWords(url string) (map[string]int, error) {
+	content, err := s.reader.LoadText(url)
 	if err != nil {
-		return models.Result{}, err
+		return map[string]int{}, errors.New("failed to download text from url")
 	}
 
-	err = s.saveResult(res)
+	// TODO: implement batch
+	words := s.parser.GetWords(content)
+	if err != nil {
+		return map[string]int{}, errors.New("failed to count words")
+	}
+	//	TODO: save to db
+	err = s.saveResult(words)
 	if err != nil {
 		fmt.Println("error saving result")
 	}
 
-	return res, nil
+	return words, nil
 }
 
 // save to db
-func (s Service) saveResult(res models.Result) error {
+func (s Service) saveResult(res map[string]int) error {
 	outPath := "test-output.txt"
 	data, _ := json.Marshal(res)
 	err := os.WriteFile(outPath, data, 0644)
@@ -57,9 +62,4 @@ func (s Service) saveResult(res models.Result) error {
 		log.Println(err, "failed to write to file")
 	}
 	return nil
-}
-
-// TODO: implement me
-func (s Service) GeocodeBatch(req models.Request) (models.Response, error) {
-	return models.Response{}, nil
 }

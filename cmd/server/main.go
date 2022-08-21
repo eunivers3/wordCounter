@@ -2,37 +2,30 @@ package main
 
 import (
 	"fmt"
-	google "github.com/eunicebjm/gc/internal/google/geocoder"
-	"github.com/eunicebjm/gc/internal/service"
-	transporthttp "github.com/eunicebjm/gc/internal/transport/http"
+	"github.com/eunicebjm/wordCounter/internal/parser"
+	"github.com/eunicebjm/wordCounter/internal/reader"
+	"github.com/eunicebjm/wordCounter/internal/service"
+	transporthttp "github.com/eunicebjm/wordCounter/internal/transport/http"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
-	"os"
-)
-
-const (
-	geocoderAPIKey = "google_api_key"
 )
 
 func main() {
-	// Load config
-	apiKey, ok := os.LookupEnv(geocoderAPIKey)
-	if !ok{
-		fmt.Println("missing google api key")
-		return
-	}
-
-	// Setup google client
-	googleGeocoder, err := google.NewGeocoderClient(apiKey)
-	if err != nil {
-		fmt.Println("failed to setup google geocoder client")
-		return
-	}
-
 	// Setup service
-	svc, err  := service.NewService(googleGeocoder)
+	reader, err := reader.New()
 	if err != nil {
-		fmt.Println("failed to start service")
+		log.Fatal("creating reader", err)
+		return
+	}
+	parser, err := parser.New()
+	if err != nil {
+		log.Fatal("creating parser", err)
+		return
+	}
+
+	svc := service.New(reader, parser)
+	if err != nil {
 		return
 	}
 
@@ -48,7 +41,7 @@ func main() {
 
 	// endpoints, handler functions & HTTP method
 	router.
-		HandleFunc("/geocode", httpHandler.GeocodeOne).
+		HandleFunc("/count", httpHandler.CountWords).
 		Methods("GET")
 	http.Handle("/", router)
 
