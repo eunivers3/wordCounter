@@ -27,6 +27,10 @@ TODO: explain the project structure.
 
 TODO: Add dependencies
 
+## How it works
+
+This service scans the web response word by word and preprocesses them before adding to a counter.
+
 ## Spec
 
 GET `/count` returns the word counts of a webpage from a URL passed through the request body
@@ -65,6 +69,7 @@ Any steps required before submitting a pull request for this service. This inclu
 ## Roadmap
 
 - Optimise with goroutines and file chunking, perhaps store in DB first?
+- Test other approaches efficiency e.g. reading a file in chunks concurrently,reading the entire file into memory,splitting long strings into words
 - HTML parsing for relevant text only
 - pagination of response
 - sorting of response
