@@ -2,7 +2,7 @@
 
 This service will be used to return a word count of a webpage given a URL.
 Currently, this service only has the ability to fetch the word count of a URL returning a text file or equivalent.
-But there is scope to start fetching the textual content from all web pages by parsing html.
+But there is scope to start fetching the relevant textual content from all webpages by parsing html.
 
 ## Documentation
 TODO: Add useful links here e.g. to confluence docs
@@ -58,11 +58,13 @@ Any steps required before submitting a pull request for this service. This inclu
 
 ## Limitations
 
-TODO: what is missing.
+- add more tests
+- add mock for sample web response
+- containerise with Docker
 
 ## Roadmap
 
-- Optimise with goroutines and file chunking. 
+- Optimise with goroutines and file chunking, perhaps store in DB first?
 - HTML parsing for relevant text only
 - pagination of response
 - sorting of response
