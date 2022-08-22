@@ -1,65 +1,75 @@
 package service
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
+	"bufio"
 	"log"
-	"os"
-)
-
-var (
-	ErrInvalidParam = errors.New("invalid_parameter")
+	"net/http"
 )
 
 type Service struct {
-	reader Reader
 	parser Parser
 }
 
-type Reader interface {
-	LoadText(url string) ([]string, error)
-	LoadText2(url string) (string, error)
-}
-
 type Parser interface {
-	GetWords(content []string) map[string]int
+	Preprocess(word string) string
+	//SortByWordCount(words map[string]int) map[string]int
+	//ProcessHTML()
 }
 
-func New(reader Reader, parser Parser) *Service {
+func New(parser Parser) *Service {
 	return &Service{
-		reader: reader,
 		parser: parser,
 	}
 }
 
 func (s *Service) CountWords(url string) (map[string]int, error) {
-	content, err := s.reader.LoadText(url)
+	// load content
+	res, err := http.Get(url)
 	if err != nil {
-		return map[string]int{}, errors.New("failed to download text from url")
+		log.Println("failed to get url response")
+		return map[string]int{}, err
+	}
+	defer res.Body.Close()
+	//TODO: add html parsing to filter text from body content
+
+	words := make(map[string]int)
+
+	scanner := bufio.NewScanner(res.Body)
+	scanner.Split(bufio.ScanWords) // split to chunks
+	for scanner.Scan() {
+		word := scanner.Text()
+		word = s.parser.Preprocess(word) // clean word
+		if word != "" {
+			words[word]++
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("failed to get words: %v", err)
+		return nil, err
 	}
 
-	// TODO: implement batch
-	words := s.parser.GetWords(content)
-	if err != nil {
-		return map[string]int{}, errors.New("failed to count words")
-	}
-	//	TODO: save to db
-	err = s.saveResult(words)
-	if err != nil {
-		fmt.Println("error saving result")
-	}
+	// TODO: add sorting ability
+	//if sortByCount {
+	//	return s.parser.SortByWordCount(words), nil
+	//}
 
 	return words, nil
 }
 
-// save to db
-func (s Service) saveResult(res map[string]int) error {
-	outPath := "test-output.txt"
-	data, _ := json.Marshal(res)
-	err := os.WriteFile(outPath, data, 0644)
-	if err != nil {
-		log.Println(err, "failed to write to file")
-	}
-	return nil
-}
+// TODO: add pagination
+//var data []map[string]int
+//
+//func GetPageData(page int, itemsPerPage int) []map[string]int {
+//	start := (page - 1) * itemsPerPage
+//	stop := start + itemsPerPage
+//
+//	if start > len(data) {
+//		return nil
+//	}
+//
+//	if stop > len(data) {
+//		stop = len(data)
+//	}
+//
+//	return data[start:stop]
+//}

@@ -46,6 +46,9 @@ func (h *Handler) CountWords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// url passed in body so can fit more diverse data
+	// - more complex objects if needed in future
+	// long urls which won't err on req uri too long
 	if req.URL == "" {
 		http.Error(w, "bad_request", 400)
 		return
@@ -66,6 +69,6 @@ func (h *Handler) CountWords(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal_server_error", 500)
 		return
 	}
-
+	// TODO: implement pagination of response
 	w.Write(JSONResponse)
 }

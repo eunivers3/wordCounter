@@ -1,8 +1,8 @@
 package parser
 
 import (
+	"regexp"
 	"strings"
-	"unicode"
 )
 
 type Parser struct{}
@@ -11,64 +11,40 @@ func New() (Parser, error) {
 	return Parser{}, nil
 }
 
-func (p Parser) GetWords(content []string) map[string]int {
-	words := make(map[string]int)
-	for _, line := range content {
-		for k, v := range wordCount(line) {
-			words[k] += v
-		}
+// Preprocess removes all non-alphabetical characters
+func (p Parser) Preprocess(word string) string {
+	//	TODO:
+	//	 handle dashed words e.g. life-changing
+	//	 handle words with apostrophes e.g. I've, you'll etc.
+	r, err := regexp.Compile("[^a-zA-Z]+")
+	if err != nil {
+		return ""
 	}
-	return words
+	return strings.ToLower(r.ReplaceAllString(word, ""))
 }
 
-// separate by alphabet start letter?
-// for whole words that are separated by dash or apostrophes
-func wordCount(line string) map[string]int {
-	fields := strings.FieldsFunc(line, func(r rune) bool {
-		return !unicode.IsLetter(r)
-	})
-	words := make(map[string]int)
-	for _, field := range fields {
-		words[strings.ToLower(field)]++
-	}
-	return words
-}
-
-//func preprocess(line string) string {
-//	// remove all punctuation
-//	// handle doubled dashes
-//	// keep apostrophes except
-//	// to lower
+//type pair struct {
+//	Key   string
+//	Value int
 //}
 
-//func main() {
-//	text := "This is a big apple tree. I love big big apple! 42 life--changing iii. you're"
-//	fields := strings.FieldsFunc(text, func(r rune) bool {
-// returns whole words ignoring punctuation
-//return !('a' <= r && r <= 'z' || 'A' <= r && r <= 'Z')
-// returns whole words with punctuation
-// need to rm everything except  ' and -
-//		return !('a' <= r && r <= 'z' || 'A' <= r && r <= 'Z')
+//func (p Parser) SortByWordCount(words map[string]int) map[string]int {
+//	var pairs []pair
+//	for k, v := range words {
+//		pairs = append(pairs, pair{k, v})
+//	}
+//
+//	sort.Slice(words, func(i, j int) bool {
+//		return pairs[i].Value > pairs[j].Value
 //	})
-//	words := make(map[string]int)
-//	for _, field := range fields {
-//		words[strings.ToLower(field)]++
-//	}
-//	fmt.Println(words)
+//
+//	return mapToWordCount(pairs)
 //}
-
-//"[^\w\d'-\s]+"
-
-//func wordCount(str string) map[string]int {
-//	wordList := strings.Fields(str)
-//	counts := make(map[string]int)
-//	for _, word := range wordList {
-//		_, ok := counts[word]
-//		if ok {
-//			counts[word] += 1
-//		} else {
-//			counts[word] = 1
-//		}
+//
+//func mapToWordCount(pairs []pair) map[string]int {
+//	words := make(map[string]int, len(pairs))
+//	for _, p := range pairs {
+//		words[p.Key] = p.Value
 //	}
-//	return counts
+//	return words
 //}

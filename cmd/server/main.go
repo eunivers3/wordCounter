@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/eunicebjm/wordCounter/internal/parser"
-	"github.com/eunicebjm/wordCounter/internal/reader"
 	"github.com/eunicebjm/wordCounter/internal/service"
 	transporthttp "github.com/eunicebjm/wordCounter/internal/transport/http"
 	"github.com/gorilla/mux"
@@ -13,18 +12,13 @@ import (
 
 func main() {
 	// Setup service
-	reader, err := reader.New()
-	if err != nil {
-		log.Fatal("creating reader", err)
-		return
-	}
-	parser, err := parser.New()
+	p, err := parser.New()
 	if err != nil {
 		log.Fatal("creating parser", err)
 		return
 	}
 
-	svc := service.New(reader, parser)
+	svc := service.New(p)
 	if err != nil {
 		return
 	}
@@ -40,6 +34,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// endpoints, handler functions & HTTP method
+	// TODO: add pagination request config as params
 	router.
 		HandleFunc("/count", httpHandler.CountWords).
 		Methods("GET")
